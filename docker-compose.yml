@@ -14,11 +14,16 @@ services:
       - db:/var/lib/mysql
     networks:
       - backend
-  
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "1G"
   bezkoder-api:
     depends_on:
       - mysqldb
-    build: ./bezkoder-api
+    image: adeeltech/bezkoder-api:latest
+    # build: ./bezkoder-api
     restart: unless-stopped
     env_file: ./.env
     ports:
@@ -33,21 +38,71 @@ services:
     networks:
       - backend
       - frontend
-
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "512M"
   bezkoder-ui:
     depends_on:
       - bezkoder-api
-    build:
-      context: ./bezkoder-ui
-      args:
-        - REACT_APP_API_BASE_URL=$CLIENT_API_BASE_URL
+    image: adeeltech/bezkoder-ui:latest
+
+      # context: ./bezkoder-ui
+       # args:
+    #     - REACT_APP_API_BASE_URL=$CLIENT_API_BASE_URL
     ports:
       - $REACT_LOCAL_PORT:$REACT_DOCKER_PORT
     networks:
-      - frontend  
+      - frontend 
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M" 
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - backend
+    
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    restart: always
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - backend
+  grafana:
+    image: grafana/grafana
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - backend
+  portainer:
+    image: portainer/portainer-ce
+    restart: always
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - backend
 
 volumes: 
   db:
+  portainer_data:
 
 networks:
   backend:
