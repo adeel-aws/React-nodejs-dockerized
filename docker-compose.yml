@@ -1,80 +1,68 @@
-version: '3.8'
+version: "3.8"
 
 services:
+
   mysqldb:
     image: mysql:5.7
     restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
     env_file: ./.env
     environment:
-      - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
-      - MYSQL_DATABASE=$MYSQLDB_DATABASE
+      MYSQL_ROOT_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQL_DATABASE: $MYSQLDB_DATABASE
     ports:
-      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
+      - "${MYSQLDB_LOCAL_PORT}:${MYSQLDB_DOCKER_PORT}"
     volumes:
       - db:/var/lib/mysql
     networks:
       - backend
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: "1G"
+
   bezkoder-api:
     depends_on:
       - mysqldb
-    image: adeeltech/bezkoder-api:latest
-    # build: ./bezkoder-api
+    build: ./bezkoder-api
     restart: unless-stopped
     env_file: ./.env
     ports:
-      - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
+      - "${NODE_LOCAL_PORT}:${NODE_DOCKER_PORT}"
     environment:
-      - DB_HOST=mysqldb
-      - DB_USER=$MYSQLDB_USER
-      - DB_PASSWORD=$MYSQLDB_ROOT_PASSWORD
-      - DB_NAME=$MYSQLDB_DATABASE
-      - DB_PORT=$MYSQLDB_DOCKER_PORT
-      - CLIENT_ORIGIN=$CLIENT_ORIGIN
+      DB_HOST: mysqldb
+      DB_USER: $MYSQLDB_USER
+      DB_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      DB_NAME: $MYSQLDB_DATABASE
+      DB_PORT: $MYSQLDB_DOCKER_PORT
+      CLIENT_ORIGIN: $CLIENT_ORIGIN
     networks:
       - backend
       - frontend
-    deploy:
-      resources:
-        limits:
-          cpus: "2"
-          memory: "512M"
+
   bezkoder-ui:
     depends_on:
       - bezkoder-api
-    image: adeeltech/bezkoder-ui:latest
-
-      # context: ./bezkoder-ui
-       # args:
-    #     - REACT_APP_API_BASE_URL=$CLIENT_API_BASE_URL
+    build:
+      context: ./bezkoder-ui
+      args:
+        REACT_APP_API_BASE_URL: $CLIENT_API_BASE_URL
     ports:
-      - $REACT_LOCAL_PORT:$REACT_DOCKER_PORT
+      - "${REACT_LOCAL_PORT}:${REACT_DOCKER_PORT}"
     networks:
-      - frontend 
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: "256M" 
+      - frontend
+
   prometheus:
     image: prom/prometheus
     restart: always
     ports:
-      - 9090:9090
+      - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - backend
-    
+
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     restart: always
     ports:
-      - 8080:8080
+      - "8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -82,27 +70,32 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
       - backend
+
   grafana:
     image: grafana/grafana
     restart: always
     ports:
-      - 3000:3000
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
     networks:
       - backend
+
   portainer:
     image: portainer/portainer-ce
     restart: always
     ports:
-      - 9000:9000
+      - "9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
     networks:
       - backend
 
-volumes: 
+volumes:
   db:
   portainer_data:
+  grafana_data:
 
 networks:
   backend:
