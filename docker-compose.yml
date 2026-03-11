@@ -20,7 +20,7 @@ services:
   bezkoder-api:
     depends_on:
       - mysqldb
-    build: ./bezkoder-api
+    image: pull adeeltech/bezkoder-api:latest
     restart: unless-stopped
     env_file: ./.env
     ports:
@@ -39,10 +39,7 @@ services:
   bezkoder-ui:
     depends_on:
       - bezkoder-api
-    build:
-      context: ./bezkoder-ui
-      args:
-        REACT_APP_API_BASE_URL: $CLIENT_API_BASE_URL
+    image: adeeltech/bezkoder-ui:latest
     ports:
       - "${REACT_LOCAL_PORT}:${REACT_DOCKER_PORT}"
     networks:
@@ -62,7 +59,7 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     restart: always
     ports:
-      - "8080:8080"
+      - "8000:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -75,7 +72,7 @@ services:
     image: grafana/grafana
     restart: always
     ports:
-      - "3001:3000"
+      - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
