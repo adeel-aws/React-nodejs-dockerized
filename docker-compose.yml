@@ -65,8 +65,8 @@ services:
   prometheus:
     image: prom/prometheus
     restart: always
-    ports:
-      - "9090:9090"
+    expose:
+      - "9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
@@ -75,8 +75,8 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     restart: always
-    ports:
-      - "8000:8080"
+    expose:
+      - "8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -111,8 +111,8 @@ services:
 
 volumes:
   db:
-  portainer_data:
   grafana_data:
+  portainer_data:
 
 networks:
   backend:
