@@ -20,7 +20,7 @@ services:
   bezkoder-api:
     depends_on:
       - mysqldb
-    image: pull adeeltech/bezkoder-api:latest
+    image: adeeltech/bezkoder-api:latest
     restart: unless-stopped
     env_file: ./.env
     ports:
